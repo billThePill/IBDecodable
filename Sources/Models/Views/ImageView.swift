@@ -41,6 +41,8 @@ public struct ImageView: IBDecodable, ViewProtocol, IBIdentifiable {
     public let tintColor: Color?
     public let isHidden: Bool?
     public let alpha: Float?
+    public let horizontalCompressionResistancePriority: Int?
+    public let verticalCompressionResistancePriority: Int?
 
     enum ConstraintsCodingKeys: CodingKey { case constraint }
     enum VariationCodingKey: CodingKey { case variation }
@@ -95,7 +97,9 @@ public struct ImageView: IBDecodable, ViewProtocol, IBIdentifiable {
             backgroundColor:                           colorsContainer?.withAttributeElement(.key, CodingKeys.backgroundColor.stringValue),
             tintColor:                                 colorsContainer?.withAttributeElement(.key, CodingKeys.tintColor.stringValue),
             isHidden:                                  container.attributeIfPresent(of: .isHidden),
-            alpha:                                     container.attributeIfPresent(of: .alpha)
+            alpha:                                     container.attributeIfPresent(of: .alpha),
+            horizontalCompressionResistancePriority:   container.attributeIfPresent(of: .horizontalCompressionResistancePriority),
+            verticalCompressionResistancePriority:     container.attributeIfPresent(of: .verticalCompressionResistancePriority)
         )
     }
 }
