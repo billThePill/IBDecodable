@@ -172,7 +172,10 @@ public struct CollectionViewCell: IBDecodable, ViewProtocol, IBIdentifiable, IBR
     public let tintColor: Color?
     public let isHidden: Bool?
     public let alpha: Float?
-    
+
+    public let _oldContentView: CollectionViewContentView?
+    public let _newContentView: CollectionViewContentView?
+
     public var children: [IBElement] {
         // do not let default implementation which lead to duplicate element contentView
         var children: [IBElement] = [contentView] + (rect.map { [$0] } ?? [])
@@ -192,7 +195,7 @@ public struct CollectionViewCell: IBDecodable, ViewProtocol, IBIdentifiable, IBR
     }
 
     public struct CollectionViewContentView: IBDecodable, ViewProtocol {
-        public let id: String
+        public let id: String? // older view containers do not have an id
         public let elementClass: String = "UIView"
 
         public let key: String?
@@ -245,7 +248,7 @@ public struct CollectionViewCell: IBDecodable, ViewProtocol, IBIdentifiable, IBR
                 .nestedContainerIfPresent(of: .color, keys: ColorsCodingKeys.self)
 
             return CollectionViewContentView(
-                id:                                        try container.attribute(of: .id),
+                id:                                        container.attributeIfPresent(of: .id),
                 key:                                       container.attributeIfPresent(of: .key),
                 autoresizingMask:                          container.elementIfPresent(of: .autoresizingMask),
                 clipsSubviews:                             container.attributeIfPresent(of: .clipsSubviews),
@@ -289,8 +292,8 @@ public struct CollectionViewCell: IBDecodable, ViewProtocol, IBIdentifiable, IBR
                 case .isAmbiguous: return "ambiguous"
                 case .isHidden: return "hidden"
                 case ._subviews: return "subview"
-                //case .contentView: return "view"
-                case .contentView: return "collectionViewCellContentView"
+                case ._oldContentView: return "view"
+                case ._newContentView: return "collectionViewCellContentView"
                 default: return key.stringValue
                 }
             }()
@@ -301,13 +304,21 @@ public struct CollectionViewCell: IBDecodable, ViewProtocol, IBIdentifiable, IBR
         let colorsContainer = xml.container(keys: ExternalCodingKeys.self)
             .nestedContainerIfPresent(of: .color, keys: ColorsCodingKeys.self)
 
+        let conCV: CollectionViewContentView
+        let newCV: CollectionViewContentView? = container.elementIfPresent(of: ._newContentView)
+        if let newCV = newCV {
+            conCV = newCV
+        } else {
+            conCV = try container.element(of: ._oldContentView)
+        }
+
         return CollectionViewCell(
             id:                                        try container.attribute(of: .id),
             key:                                       container.attributeIfPresent(of: .key),
             autoresizingMask:                          container.elementIfPresent(of: .autoresizingMask),
             clipsSubviews:                             container.attributeIfPresent(of: .clipsSubviews),
             constraints:                               constraintsContainer?.elementsIfPresent(of: .constraint),
-            contentView:                               try container.element(of: .contentView),
+            contentView:                               conCV,
             contentMode:                               container.attributeIfPresent(of: .contentMode),
             customClass:                               container.attributeIfPresent(of: .customClass),
             customModule:                              container.attributeIfPresent(of: .customModule),
@@ -329,7 +340,9 @@ public struct CollectionViewCell: IBDecodable, ViewProtocol, IBIdentifiable, IBR
             backgroundColor:                           colorsContainer?.withAttributeElement(.key, CodingKeys.backgroundColor.stringValue),
             tintColor:                                 colorsContainer?.withAttributeElement(.key, CodingKeys.tintColor.stringValue),
             isHidden:                                  container.attributeIfPresent(of: .isHidden),
-            alpha:                                     container.attributeIfPresent(of: .alpha)
+            alpha:                                     container.attributeIfPresent(of: .alpha),
+            _oldContentView:                           container.elementIfPresent(of: ._oldContentView),
+            _newContentView:                           container.elementIfPresent(of: ._newContentView)
         )
     }
 }
