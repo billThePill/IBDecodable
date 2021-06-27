@@ -288,7 +288,8 @@ public struct CollectionViewCell: IBDecodable, ViewProtocol, IBIdentifiable, IBR
                 case .isAmbiguous: return "ambiguous"
                 case .isHidden: return "hidden"
                 case ._subviews: return "subview"
-                case .contentView: return "view"
+                //case .contentView: return "view"
+                case .contentView: return "collectionViewCellContentView"
                 default: return key.stringValue
                 }
             }()
